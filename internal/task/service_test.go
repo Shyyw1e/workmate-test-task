@@ -65,3 +65,32 @@ func TestTaskCancellation(t *testing.T) {
 	_, err := service.GetTask(task.ID)
 	assert.Error(t, err)
 }
+
+func TestListTasks_Filtering(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	service := NewTaskService(logger)
+
+	t1 := service.CreateTask()
+	t2 := service.CreateTask()
+
+	service.DeleteTask(t2.ID)
+
+	time.Sleep(100 * time.Millisecond)
+
+	all := service.ListTasks(nil)
+	assert.GreaterOrEqual(t, len(all), 2)
+
+	status := StatusRunning
+	running := service.ListTasks(&status)
+	assert.True(t, containsTaskWithID(running, t1.ID))
+	assert.False(t, containsTaskWithID(running, t2.ID))
+}
+
+func containsTaskWithID(tasks []*Task, id string) bool {
+	for _, task := range tasks {
+		if task.ID == id {
+			return true
+		}
+	}
+	return false
+}

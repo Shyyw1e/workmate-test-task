@@ -109,3 +109,17 @@ func (s *TaskService) DeleteTask(id string) error {
 	s.logger.Info("Task deleted", slog.String("task_id", id))
 	return nil
 }
+
+func (s *TaskService) ListTasks(filterStatus *Status) []*Task {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var result []*Task
+	for _, task := range s.tasks {
+		if filterStatus == nil || filterStatus == &task.Status {
+			result = append(result, task)
+		}
+	}
+
+	return result
+}

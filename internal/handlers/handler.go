@@ -25,6 +25,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/tasks", h.CreateTask)
 	r.Get("/tasks/{id}", h.GetTask)
 	r.Delete("/tasks/{id}", h.DeleteTask)
+	r.Get("/tasks", h.ListTasks)
+
 }
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -60,4 +62,17 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+func (h *Handler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("status")
+
+	var status *task.Status
+	if query != "" {
+		s := task.Status(query)
+		status = &s
+	}
+
+	tasks := h.service.ListTasks(status)
+	writeJSON(w, http.StatusOK, tasks)
 }
